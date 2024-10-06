@@ -5,6 +5,7 @@ extends CharacterBody2D
 
 var health = max_health
 signal health_changed(current_health)
+signal died
 
 func _ready() -> void:
 	health = max_health
@@ -25,8 +26,4 @@ func take_damage(amount):
 	health -= amount
 	emit_signal("health_changed", health)
 	if health <= 0:
-		die()
-
-func die():
-	print("YOU DIED")
-	pass
+		emit_signal("died")
