@@ -1,0 +1,124 @@
+[gd_scene load_steps=12 format=3 uid="uid://7ge4nhej28et"]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_8kh38"]
+[ext_resource type="Texture2D" uid="uid://b37jkna0udif2" path="res://assets/image/ground.png" id="1_c2tpc"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="2_dfuyl"]
+[ext_resource type="Texture2D" uid="uid://dfquvadxtpwwo" path="res://assets/image/player.png" id="3_6gwsy"]
+[ext_resource type="Script" path="res://scripts/flamethrower.gd" id="3_ee36o"]
+[ext_resource type="Texture2D" uid="uid://cpxe1k1krti07" path="res://assets/image/fire.png" id="4_piovb"]
+[ext_resource type="Script" path="res://scripts/enemySpawner.gd" id="5_j1kbq"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_gh1wb"]
+radius = 20.0
+height = 100.0
+
+[sub_resource type="Curve" id="Curve_u3624"]
+min_value = -360.0
+max_value = 360.0
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.25, 278.415), 0.0, 0.0, 0, 0, Vector2(0.508475, 7.70206), 0.0, 0.0, 0, 0, Vector2(0.737288, 274.707), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="Curve" id="Curve_uisll"]
+_data = [Vector2(0.0381356, 0.417987), 0.0, -0.850871, 0, 0, Vector2(0.497881, 0.469493), -2.35003, -2.35003, 0, 0, Vector2(0.995763, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Gradient_7gdlv"]
+offsets = PackedFloat32Array(0, 0.13964, 0.387387, 0.614865, 1)
+colors = PackedColorArray(1, 1, 0.329412, 1, 0.687416, 0.553105, 0.0582286, 1, 1, 0.666869, 0.123633, 1, 0.848877, 0.174717, 0.174047, 1, 1, 1, 1, 0)
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_8kh38")
+
+[node name="parallax-ground" type="Parallax2D" parent="."]
+repeat_size = Vector2(800, 600)
+
+[node name="ground" type="Sprite2D" parent="parallax-ground"]
+texture_filter = 1
+texture = ExtResource("1_c2tpc")
+centered = false
+
+[node name="Player" type="CharacterBody2D" parent="." groups=["Player"]]
+position = Vector2(401, 458)
+motion_mode = 1
+script = ExtResource("2_dfuyl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+position = Vector2(5, -1)
+shape = SubResource("CapsuleShape2D_gh1wb")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+texture = ExtResource("3_6gwsy")
+
+[node name="Flamethrower" type="Node2D" parent="Player"]
+position = Vector2(45, 1)
+script = ExtResource("3_ee36o")
+
+[node name="Area2D" type="Area2D" parent="Player/Flamethrower"]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Player/Flamethrower/Area2D"]
+position = Vector2(3, -2)
+polygon = PackedVector2Array(-4, 2, 208, -64, 211, 70)
+
+[node name="Particles2D" type="CPUParticles2D" parent="Player/Flamethrower"]
+position = Vector2(-1, 0)
+amount = 5000
+speed_scale = 20.0
+explosiveness = 0.15
+randomness = 1.0
+texture = ExtResource("4_piovb")
+spread = 20.12
+gravity = Vector2(0, 0)
+initial_velocity_max = 290.0
+angular_velocity_min = -45.0
+angular_velocity_max = 45.0
+angular_velocity_curve = SubResource("Curve_u3624")
+scale_amount_min = 0.0
+scale_amount_max = 0.3
+scale_amount_curve = SubResource("Curve_uisll")
+color_ramp = SubResource("Gradient_7gdlv")
+
+[node name="EnemySpawner" type="Timer" parent="."]
+wait_time = 0.2
+autostart = true
+script = ExtResource("5_j1kbq")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Margins" type="MarginContainer" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HealthBarContainer" type="Control" parent="UI/Margins"]
+custom_minimum_size = Vector2(200, 30)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="HealthBar" type="ProgressBar" parent="UI/Margins/HealthBarContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+rounded = true
+show_percentage = false
+
+[node name="SurvivalTimer" type="Label" parent="UI/Margins"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[connection signal="health_changed" from="Player" to="." method="_on_player_health_changed"]
+[connection signal="body_entered" from="Player/Flamethrower/Area2D" to="Player/Flamethrower" method="_on_area_2d_body_entered"]
+[connection signal="body_exited" from="Player/Flamethrower/Area2D" to="Player/Flamethrower" method="_on_area_2d_body_exited"]
+[connection signal="timeout" from="EnemySpawner" to="EnemySpawner" method="_on_timeout"]
